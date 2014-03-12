@@ -1,0 +1,3 @@
+sources/bin/*
+sources/gen/*
+.DS_Store
