@@ -3,6 +3,7 @@ package com.inappcoins.activity;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,37 +38,53 @@ under the License.
 */
 
 public class DrawableManager {
-    private final Map<String, Drawable> drawableMap;
+	private class UrlImage {
+		public boolean isDownloaded;
+		public Drawable drawable;
+		public ArrayList<ImageView> imageViews;
+		
+		public UrlImage() {
+			isDownloaded = false;
+			imageViews = new ArrayList<ImageView>();
+		}
+	}
+	
+    private final Map<String, UrlImage> urlImageMap;
     private Handler handler = null;
     
     public DrawableManager() {
-        Log.d(this.getClass().getSimpleName(), "creating DrawableManager");
-        drawableMap = new HashMap<String, Drawable>();
+    	//Log.d(this.getClass().getSimpleName(), "creating DrawableManager");
+        urlImageMap = new HashMap<String, UrlImage>();
         handler = new Handler();
     }
 
     public Drawable fetchDrawable(String urlString) {
-        if (drawableMap.containsKey(urlString)) {
-            return drawableMap.get(urlString);
+    	if (urlImageMap.containsKey(urlString)) {
+            if (urlImageMap.get(urlString).isDownloaded) {
+            	return urlImageMap.get(urlString).drawable;
+            } else {
+                Log.e(this.getClass().getSimpleName(), "url: " + urlString + " is not downloaded, should not be called");
+                return null;
+            }
         }
-
-        Log.d(this.getClass().getSimpleName(), "image url:" + urlString);
+        
         try {
+        	urlImageMap.put(urlString, new UrlImage());
+
             InputStream is = fetch(urlString);
-            Drawable drawable = Drawable.createFromStream(is, "src");
+            final Drawable drawable = Drawable.createFromStream(is, "src");
 
             if (drawable != null) {
-                drawableMap.put(urlString, drawable);
-                /*
-                 Log.d(this.getClass().getSimpleName(), "got a thumbnail drawable: " + drawable.getBounds() + ", "
-                        + drawable.getIntrinsicHeight() + "," + drawable.getIntrinsicWidth() + ", "
-                        + drawable.getMinimumHeight() + "," + drawable.getMinimumWidth());
-                */
+                //drawableMap.put(urlString, drawable);
+                //Log.d(this.getClass().getSimpleName(), "saving drawable to url: " + urlString);
+            	urlImageMap.get(urlString).drawable = drawable;
+            	urlImageMap.get(urlString).isDownloaded = true;
             } else {
               Log.w(this.getClass().getSimpleName(), "could not get thumbnail");
+              urlImageMap.remove(urlString);
             }
-
             return drawable;
+            
         } catch (MalformedURLException e) {
             Log.e(this.getClass().getSimpleName(), "fetchDrawable failed", e);
             return null;
@@ -81,10 +98,29 @@ public class DrawableManager {
     }
 
     public void fetchDrawableOnThread(final String urlString, final ImageView imageView) {
-        if (drawableMap.containsKey(urlString)) {
-            imageView.setImageDrawable(drawableMap.get(urlString));
+    	if (urlImageMap.containsKey(urlString)) {
+        	if (urlImageMap.get(urlString).isDownloaded) {
+        		imageView.setImageDrawable(urlImageMap.get(urlString).drawable);
+        		//Log.d(this.getClass().getSimpleName(), "url = " + urlString + " already downloaded, returning");
+        		return;
+        	} else {
+        		// fucking recycling scrollview
+        		for (Map.Entry<String, UrlImage> entry : urlImageMap.entrySet()) {
+        		    String key = entry.getKey();
+        		    UrlImage value = entry.getValue();
+        		    for (int i = 0; i < value.imageViews.size(); i++) {
+        		    	if(value.imageViews.get(i) == imageView && !key.equals(urlString)) {
+        	                value.imageViews.remove(i);
+        		    	}
+					}
+        		}
+        		if(!urlImageMap.get(urlString).imageViews.contains(imageView)) {
+            		urlImageMap.get(urlString).imageViews.add(imageView);
+        		}
+        		return;
+        	}
         }
-
+    	
         Thread thread = new Thread() {
             @Override
             public void run() {
@@ -92,7 +128,11 @@ public class DrawableManager {
                 handler.post(new Runnable() {
 					@Override
 					public void run() {
-		                imageView.setImageDrawable(drawable);
+						//Log.d(this.getClass().getSimpleName(), "url = " + urlString + " listView.size() = " + urlImageMap.get(urlString).imageViews.size());
+						for (ImageView iView : urlImageMap.get(urlString).imageViews) {
+							iView.setImageDrawable(drawable);
+						}
+						urlImageMap.get(urlString).imageViews.clear();
 					}
 				});
             }

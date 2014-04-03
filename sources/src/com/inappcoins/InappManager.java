@@ -101,15 +101,18 @@ public class InappManager {
     	List<RewardItem> rewards = parseRewardsJSON(jsonString);
     	if(rewards.size() > 0) {
     		for (int i = 0; i < rewards.size(); i++) {
-        		String hash = getRewardHash(rewards.get(i));
+        		final String hash = getRewardHash(rewards.get(i));
         		if(hash.equals(rewards.get(i).getHash())) {
-        			listener.purchaseSuccess(rewards.get(i));
+        			//listener.purchaseSuccess(rewards.get(i));
+        			callPurchaseSuccess(listener, rewards.get(i));
         		} else {
-        			listener.purchaseFailure(null);
+        			//listener.purchaseFailure(null);
+        			callPurchaseFailure(listener);
         		}
     		}
     	} else {
-    		listener.purchaseDidntReceivedYet();
+    		//listener.purchaseDidntReceivedYet();
+    		callPurchaseDidntReceivedYet(listener);
     	}
     	
     }
@@ -222,7 +225,8 @@ public class InappManager {
 		            String usd_value = (String) obj.get("usd_value");
 		
 		            addInapp(new InappItem(name, Double.parseDouble(vc_value), vc_name, image, satoshi, inappkey, Double.parseDouble(usd_value), "WalletAdress"));
-					System.out.println("adding inapp");
+		            //System.out.println("adding inapp");
+					
 		        }
 			} else {
 	    		System.out.println("parseInappsJSON else: " + jsonString);
@@ -234,12 +238,13 @@ public class InappManager {
 	}
 
 	private static String postData(final String url, final List<NameValuePair> pairs) {
-    	String finalUrl = url + "?";
+    	/*
+		String finalUrl = url + "?";
     	for (NameValuePair pair : pairs) {
 			finalUrl += pair.getName() + "=" + pair.getValue() + "&";
 		}
-		System.out.println("postData: " + finalUrl);
-
+    	System.out.println("postData: " + finalUrl);
+    	*/
     	
     	try {
     		Thread thread = new Thread(new Runnable() {
@@ -285,4 +290,31 @@ public class InappManager {
 
         return "";
     }
+	
+	private static void callPurchaseSuccess(final PurchaseStatusListener listener, final RewardItem reward) {
+		((Activity)InAppCoin.getContext()).getWindow().getDecorView().post(new Runnable() {
+			@Override
+			public void run() {
+				listener.purchaseSuccess(reward);
+			}
+		});
+	}
+	
+	private static void callPurchaseFailure(final PurchaseStatusListener listener) {
+		((Activity)InAppCoin.getContext()).getWindow().getDecorView().post(new Runnable() {
+			@Override
+			public void run() {
+				listener.purchaseFailure(null);
+			}
+		});
+	}
+	
+	private static void callPurchaseDidntReceivedYet(final PurchaseStatusListener listener) {
+		((Activity)InAppCoin.getContext()).getWindow().getDecorView().post(new Runnable() {
+			@Override
+			public void run() {
+				listener.purchaseDidntReceivedYet();
+			}
+		});
+	}
 }
