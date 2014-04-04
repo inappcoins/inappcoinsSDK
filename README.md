@@ -2,41 +2,44 @@ InAppCoins Android SDK Documentation
 
 Definitions
 
-InAppItem - information about in-app package
-Name 		- Name of the in-app
-VC value 	- Reward value for the in-app
-VC name 	- Reward currency type
-Image 		- Name of the image for URL request
-USD value	 - Price for the in-app in USD
+* InAppItem - information about in-app package
+* Name 	- Name of the in-app
+* VC value - Reward value for the in-app
+* VC name - Reward currency type
+* Image - Name of the image for URL request
+* USD value- Price for the in-app in USD
 
 RewardItem - information about accepted payment
-Invoice ID	- 
-VC value	- Reward value for the in-app
-VC name 	- Reward currency type
-Hash 		- Hash of the in-app for confirmation 
-Datetime 	- Date and time when the purchase was accepted
+* Invoice ID 
+* VC value	- Reward value for the in-app
+* VC name 	- Reward currency type
+* Hash 		- Hash of the in-app for confirmation 
+* Datetime 	- Date and time when the purchase was accepted
 
 InAppCoin - main class you will use
-UDID		- the unique identifier of the gamer that purchased the product
-App Key	- the identifier of the application (copy from developer section)
-Secret Key	- the secret key to authenticate the developer (copy from developer section)
-init()			- initialization of SDK
-showInappsActivity() 	- show 
+* UDID		- the unique identifier of the gamer that purchased the product
+* App Key	- the identifier of the application (copy from developer section)
+* Secret Key	- the secret key to authenticate the developer (copy from developer section)
+* init()			- initialization of SDK
+* showInappsActivity() 	- show 
 
 PurchaseActionListener - listens to 3rd party BTC wallet
+
 PurchaseActionListener starts listening when the users is redirected to the BTC Wallet.
+
 Please be advised that the PurchaseActionListener is currently under testing. 
 
 userSentPurchase()		- called when user sent BTC
+
 userCancelPurchase()	- called when user didn’t send BTC (e.g. cancel wallet application)
 
 PurchaseStatusListener - listens to InAppCoins server
-SDK automatically checks the server once in a while and calls one of these methods
+* SDK automatically checks the server once in a while and calls one of these methods
 
-purchaseSuccess()		- called when the server receives and confirms the payment
+* purchaseSuccess()		- called when the server receives and confirms the payment
 				- parameter RewardItem contains information about successful transaction
-purchaseDidntReceivedYet()	- called when the server has not received any payment
-purchaseFailure()		- called when the server receives payment with errors (e.g. fake purchase, hash mismatch)
+* purchaseDidntReceivedYet()	- called when the server has not received any payment
+* purchaseFailure()		- called when the server receives payment with errors (e.g. fake purchase, hash mismatch)
 				- parameter errors contains information about each error
 
 Implementation
